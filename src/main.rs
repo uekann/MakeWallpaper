@@ -45,8 +45,14 @@ struct Args {
     #[arg(short, long)]
     menubar_height: Option<u32>,
 
-    /// Override blur radius
-    #[arg(short, long, num_args = 0..=1, default_missing_value = "10")]
+    /// Override blur radius (0 disables blur)
+    #[arg(
+        short,
+        long,
+        num_args = 0..=1,
+        default_missing_value = "10",
+        value_parser = parse_non_negative_f32
+    )]
     blur: Option<f32>,
 
     /// Override corner radius
@@ -70,6 +76,16 @@ fn parse_size(s: &str) -> Result<(u32, u32), String> {
         .parse::<u32>()
         .map_err(|_| "Invalid height".to_string())?;
     Ok((width, height))
+}
+
+fn parse_non_negative_f32(s: &str) -> Result<f32, String> {
+    let value = s
+        .parse::<f32>()
+        .map_err(|_| "Invalid number".to_string())?;
+    if value < 0.0 {
+        return Err("Value must be non-negative".to_string());
+    }
+    Ok(value)
 }
 
 fn find_config_path() -> Option<PathBuf> {
@@ -216,7 +232,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let (target_width, target_height) = args.size.unwrap_or((base_style.width, base_style.height));
     let menubar_height = args.menubar_height.unwrap_or(base_style.menubar_height);
-    let blur = args.blur.or(base_style.blur);
+    let blur = match args.blur {
+        Some(0.0) => None,
+        Some(radius) => Some(radius),
+        None => base_style.blur,
+    };
     let round_corners = args.round_corners.or(base_style.round_corners);
 
     let img = image::open(&args.input_image)?;
@@ -247,8 +267,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if args.menubar_height.is_some() {
         overrides.push(format!("m{}", menubar_height));
     }
-    if args.blur.is_some() {
-        if let Some(b) = blur {
+    if let Some(requested_blur) = args.blur {
+        if requested_blur == 0.0 {
+            overrides.push("b0".to_string());
+        } else if let Some(b) = blur {
             overrides.push(format!("b{}", b));
         }
     }

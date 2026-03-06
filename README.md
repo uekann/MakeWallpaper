@@ -53,7 +53,7 @@ make_wallpaper <input_image> --style <style_name> [options]
 | `--config <path>` | `-c` | 設定ファイルのパス |
 | `--size <WxH>` | `-s` | 解像度を上書き（例: `1920x1080`） |
 | `--menubar-height <px>` | `-m` | メニューバーの高さを上書き |
-| `--blur [radius]` | `-b` | ぼかし半径を上書き（デフォルト: 10） |
+| `--blur [radius]` | `-b` | ぼかし半径を上書き（デフォルト: 10、`0`で無効化） |
 | `--round-corners [radius]` | `-r` | 角丸半径を上書き（デフォルト: 20） |
 | `--out-dir <dir>` | `-o` | 出力ディレクトリ（デフォルト: カレント） |
 | `--help` | `-h` | ヘルプを表示 |
@@ -82,6 +82,9 @@ make_wallpaper image.jpg -t macbook_air_15 -o ./output
 
 # スタイルの一部を上書き
 make_wallpaper image.jpg -t wqhd_monitor --blur 15 --round-corners 30
+
+# styles.tomlでblurが設定されていても無効化
+make_wallpaper image.jpg -t wqhd_monitor --blur 0
 
 # 設定ファイルを指定
 make_wallpaper image.jpg -t my_style -c /path/to/my_styles.toml
